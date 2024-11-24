@@ -22,10 +22,15 @@ def predict_ratings(train_matrix):
     weighted_sum = similarity.dot(normalized)
     sum_of_weights = np.abs(similarity).sum(axis=1)
     
-    predictions = pd.DataFrame(np.divide(weighted_sum.T, sum_of_weights, where=sum_of_weights != 0).T)
+    predictions = pd.DataFrame(
+        np.divide(weighted_sum.T, sum_of_weights, where=sum_of_weights != 0).T,
+        index=train_matrix.index,   # Set userId as row index
+        columns=train_matrix.columns  # Set movieId as column index
+    )    
     predictions = predictions.fillna(0)
     
     predictions = predictions.add(means, axis=0)
+    
     return predictions
 
 # MAE and RMSE
@@ -46,6 +51,30 @@ def calculate_MAE_RMSE(predicted, actual):
 
 # recommend 10 ratings based on predicted ratings and the training data matrix
 
+def recommend_top_n(predicted, train_matrix, top_n=10):
+
+    recommendations = {}
+
+    for user in predicted.index:  # Loop through each user
+        if user not in train_matrix.index:
+            continue  # Skip users without training data
+
+                # Get all movies the user has rated from the original ratings DataFrame
+        already_rated = ratings[ratings['userId'] == user]['movieId'].unique()
+        
+        # Get predicted ratings for the user
+        user_predictions = predicted.loc[user]
+        
+        # Filter out movies the user has already rated
+        user_recommendations = user_predictions[~user_predictions.index.isin(already_rated)]
+        
+        # Sort by predicted ratings and select top-N items
+        top_items = user_recommendations.sort_values(ascending=False).head(top_n).index.tolist()
+        
+        recommendations[user] = top_items
+        
+    return recommendations
+
 # Need to look at recommendations and test data to get 4 values: precision, recall, f measure, and ndcg
 
 def evaluate_recommendations():
@@ -60,8 +89,29 @@ train_matrix = training.pivot(index='userId', columns='movieId', values='rating'
 test_matrix = testing.pivot(index='userId', columns='movieId', values='rating')
 
 predicted_ratings = predict_ratings(train_matrix)
-#print(predicted_ratings)
+
+
 
 #print(test_matrix)
 mae, rmse = calculate_MAE_RMSE(predicted_ratings, test_matrix)
 print(f"MAE is {mae}, RMSE is {rmse}")
+
+# Generate recommendations
+top_n_recommendations = recommend_top_n(predicted_ratings, train_matrix, top_n=10)
+
+
+
+# Display recommendations for a specific user
+user_id = 1  # Replace with an actual user ID from your dataset
+if user_id in top_n_recommendations:
+    print(f"Top-10 recommendations for user {user_id}: {top_n_recommendations[user_id]}")
+    recommended_movies = movies[movies['movieId'].isin(top_n_recommendations[user_id])]
+    print(recommended_movies[['movieId', 'genres']])
+    
+
+
+else:
+    print(f"No recommendations for user {user_id}.")
+
+
+
