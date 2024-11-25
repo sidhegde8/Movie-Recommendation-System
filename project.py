@@ -56,10 +56,6 @@ def evaluate_recommendations(predicted, test_matrix, recommendations):
 
         actual_items = test_matrix.loc[user].dropna().index.tolist()
 
-        if not actual_items:
-            print(f"User {user} has no items in test set.")
-            continue
-
         relevant_items = set(actual_items).intersection(set(recommended_items))
 
         precision = len(relevant_items) / 10
@@ -80,7 +76,7 @@ def evaluate_recommendations(predicted, test_matrix, recommendations):
 
     return precision, recall, f_measure, ndcg
 
-training, testing = train_test_split(ratings, test_size=0.2, random_state=42)
+training, testing = train_test_split(ratings, test_size=0.2)
 train_matrix = training.pivot(index='userId', columns='movieId', values='rating')
 test_matrix = testing.pivot(index='userId', columns='movieId', values='rating')
 
