@@ -55,7 +55,6 @@ def recommend_top_n(predicted, train_matrix, top_n=10):
         recommendations[user] = top_items
     return recommendations
 
-# Evaluate recommendations with debugging
 def evaluate_recommendations_debug(predicted, test_matrix, recommendations, top_n=10):
     precision_list = []
     recall_list = []
@@ -65,33 +64,27 @@ def evaluate_recommendations_debug(predicted, test_matrix, recommendations, top_
         if user not in test_matrix.index:
             continue
 
-        # Items in the test data that the user has rated
         actual_items = test_matrix.loc[user].dropna().index.tolist()
 
         if not actual_items:
             print(f"User {user} has no items in test set.")
             continue
 
-        # Items in the top-N recommendations that are also in the actual test data
         relevant_items = set(actual_items).intersection(set(recommended_items))
 
         print(f"User {user}:\n  Recommended: {recommended_items}\n  Actual: {actual_items}\n  Relevant: {relevant_items}")
 
-        # Precision: |Relevant items ∩ Recommended items| / |Recommended items|
         precision = len(relevant_items) / top_n if top_n > 0 else 0
         precision_list.append(precision)
 
-        # Recall: |Relevant items ∩ Recommended items| / |Relevant items|
         recall = len(relevant_items) / len(actual_items) if len(actual_items) > 0 else 0
         recall_list.append(recall)
 
-        # NDCG: Normalized Discounted Cumulative Gain
         dcg = sum([1 / np.log2(idx + 2) for idx, item in enumerate(recommended_items) if item in relevant_items])
         idcg = sum([1 / np.log2(idx + 2) for idx in range(min(len(actual_items), top_n))])
         ndcg = dcg / idcg if idcg > 0 else 0
         ndcg_list.append(ndcg)
 
-    # Handle case where no metrics are computed
     if not precision_list or not recall_list or not ndcg_list:
         print("No valid users for metrics computation.")
         return 0, 0, 0, 0
