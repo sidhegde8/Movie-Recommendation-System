@@ -71,7 +71,7 @@ def evaluate_recommendations(predicted, test_matrix, recommendations):
 
     precision = np.mean(precision_list)
     recall = np.mean(recall_list)
-    f_measure = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0
+    f_measure = (2 * precision * recall / (precision + recall))
     ndcg = np.mean(ndcg_list)
 
     return precision, recall, f_measure, ndcg
